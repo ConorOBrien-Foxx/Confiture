@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+import confiture
+
+flag_utf8 = False
+end = ''
+
+usage = '''Usage:
+
+    confiture f <file> [input]    Reads the confiture program stored in the
+                              specified file, using the confiture code page.
+                              This option should be considered the default,
+                              but it exists solely for scoring purposes in
+                              code golf contests.
+
+    confiture fu <file> [input]   Reads the confiture program stored in the
+                              specified file, using the UTF-8 encoding.
+
+    confiture e <code> [input]    Reads a confiture program as a command line
+                              argument, using the confiture code page. This
+                              requires setting the environment variable
+                              LANG (or your OS's equivalent) to en_US or
+                              compatible.
+
+    confiture eu <code> [input]   Reads a confiture program as a command line
+                              argument, using the UTF-8 encoding. This
+                              requires setting the environment variable
+                              LANG (or your OS's equivalent) to en_US.UTF8
+                              or compatible.
+
+    Append an `n` to the flag list to append a trailing newline to the
+    program's output.
+
+Visit https://github.com/ConorOBrien-Foxx/confiture for more information.\n
+
+Forked from http://github.com/DennisMitchell/jelly.'''
+
+if len(confiture.sys.argv) < 3:
+    raise SystemExit(usage)
+
+for char in confiture.sys.argv[1]:
+	if char == 'f':
+		flag_file = True
+	elif char == 'u':
+		flag_utf8 = True
+	elif char == 'e':
+		flag_file = False
+	elif char == 'n':
+		end = '\n'
+
+if flag_file:
+	with open(confiture.sys.argv[2], 'rb') as file:
+		code = file.read()
+	if flag_utf8:
+		code = ''.join(char for char in code.decode('utf-8').replace('\n', '¶') if char in confiture.code_page)
+	else:
+		code = ''.join(confiture.code_page[i] for i in code)
+else:
+	code = confiture.sys.argv[2]
+	if flag_utf8:
+		code = ''.join(char for char in code.replace('\n', '¶') if char in confiture.code_page)
+	else:
+		code = ''.join(confiture.code_page[ord(i)] for i in code)
+
+args = list(map(confiture.try_eval, confiture.sys.argv[3:]))
+
+for index in range(min(7, len(args))):
+	confiture.atoms['³⁴⁵⁶⁷⁸⁹'[index]].call = lambda literal = args[index]: literal
+
+confiture.output(confiture.confiture_eval(code, args[:2]), end)
